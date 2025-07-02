@@ -1,5 +1,5 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
+import { MaterialIcons } from "@expo/vector-icons";
+import { Tabs } from "expo-router";
 
 export default function Layout() {
   return (
@@ -7,7 +7,7 @@ export default function Layout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Inicio',
+          title: "Inicio",
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="home" color={color} size={size} />
           ),
@@ -16,16 +16,17 @@ export default function Layout() {
       <Tabs.Screen
         name="config"
         options={{
-          title: 'Configuración',
+          title: "Configuración",
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="settings" color={color} size={size} />
           ),
         }}
       />
+
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Perfil',
+          title: "Perfil",
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="person" color={color} size={size} />
           ),
