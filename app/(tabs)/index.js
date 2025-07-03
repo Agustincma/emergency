@@ -1,16 +1,29 @@
+import { useFocusEffect } from "@react-navigation/native";
 import * as Linking from "expo-linking";
 import * as SMS from "expo-sms";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
 import { Button, Chip, Divider, Surface } from "react-native-paper";
-import { getNumbers } from "../../utils/storage";
+import { getNumbers, getPriority } from "../../utils/storage";
 
 export default function HomeScreen() {
   const [numbers, setNumbers] = useState([]);
+  const [priorityIsText, setPriorityIsText] = useState(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  useEffect(() => {
-    getNumbers().then(setNumbers);
-  }, []);
+  const loadData = async () => {
+    const nums = await getNumbers();
+    const priority = await getPriority();
+    setNumbers(nums);
+    setPriorityIsText(priority);
+    setIsLoaded(true);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [])
+  );
 
   const handleCall = () => {
     if (numbers[0]) {
@@ -33,6 +46,70 @@ export default function HomeScreen() {
     }
   };
 
+  if (!isLoaded) return null;
+
+  const BigButtonStyle = {
+    borderRadius: 100,
+    width: 200,
+    height: 200,
+    justifyContent: "center",
+    alignItems: "center",
+  };
+  const SmallButtonStyle = {
+    borderRadius: 100,
+    width: 100,
+    height: 100,
+    justifyContent: "center",
+    alignItems: "center",
+  };
+
+  const CallButton = (
+    <Button
+      mode="contained"
+      onPress={handleCall}
+      icon="phone"
+      style={{
+        marginBottom: 20,
+        backgroundColor: "red",
+        border: "12px solid #000",
+        ...(priorityIsText ? SmallButtonStyle : BigButtonStyle),
+      }}
+      labelStyle={{
+        fontSize: priorityIsText ? 16 : 20,
+        color: "white",
+      }}
+      contentStyle={{
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      Llamar
+    </Button>
+  );
+
+  const TextButton = (
+    <Button
+      mode="contained"
+      onPress={handleMessage}
+      icon="message"
+      style={{
+        marginBottom: 20,
+        backgroundColor: "#F7941D",
+        ...(priorityIsText ? BigButtonStyle : SmallButtonStyle),
+      }}
+      labelStyle={{
+        fontSize: priorityIsText ? 20 : 16,
+        color: "white",
+      }}
+      contentStyle={{
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      Text
+    </Button>
+  );
+
   return (
     <ScrollView style={{ flex: 1 }}>
       <Surface style={{ flex: 1, padding: 20 }}>
@@ -50,46 +127,19 @@ export default function HomeScreen() {
             justifyContent: "center",
             alignItems: "center",
             padding: 20,
-            border: "12px solid #000",
           }}
         >
-          <Button
-            mode="contained"
-            onPress={handleCall}
-            icon="phone"
-            style={{
-              marginBottom: 20,
-              borderRadius: 100,
-              backgroundColor: "red",
-              width: 200,
-              height: 200,
-              justifyContent: "center",
-              alignItems: "center",
-              border: "12px solid #000",
-            }}
-            labelStyle={{ fontSize: 20, color: "white" }}
-          >
-            Llamar
-          </Button>
-
-          <Button
-            mode="contained"
-            onPress={handleMessage}
-            icon="message"
-            style={{
-              borderRadius: 100,
-              backgroundColor: "#F7941D",
-            }}
-            contentStyle={{
-              width: 100,
-              height: 100,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-            labelStyle={{ fontSize: 16, color: "white" }}
-          >
-            Text
-          </Button>
+          {priorityIsText ? (
+            <>
+              {TextButton}
+              {CallButton}
+            </>
+          ) : (
+            <>
+              {CallButton}
+              {TextButton}
+            </>
+          )}
         </View>
       </Surface>
     </ScrollView>
