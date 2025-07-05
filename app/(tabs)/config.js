@@ -11,24 +11,44 @@ import {
   Card,
   HelperText,
   Paragraph,
+  RadioButton,
   Snackbar,
+  Text,
   TextInput,
   Title,
 } from "react-native-paper";
-import { getNumbers, saveNumbers } from "../../utils/storage";
+import {
+  getContactPreference,
+  getNumbers,
+  saveContactPreference,
+  saveNumbers,
+} from "../../utils/storage";
 
 export default function ConfigScreen() {
   const [num1, setNum1] = useState("");
   const [num2, setNum2] = useState("");
   const [num3, setNum3] = useState("");
+  const [contactPreference, setContactPreference] = useState("call");
   const [snackVisible, setSnackVisible] = useState(false);
 
   useEffect(() => {
-    getNumbers().then((nums) => {
-      setNum1(nums[0] || "");
-      setNum2(nums[1] || "");
-      setNum3(nums[2] || "");
-    });
+    const loadData = async () => {
+      try {
+        const nums = await getNumbers();
+        console.log("Config: Números cargados:", nums);
+        setNum1(nums[0] || "");
+        setNum2(nums[1] || "");
+        setNum3(nums[2] || "");
+
+        const preference = await getContactPreference();
+        console.log("Config: Preferencia cargada:", preference);
+        setContactPreference(preference);
+      } catch (error) {
+        console.error("Config: Error cargando datos:", error);
+      }
+    };
+
+    loadData();
   }, []);
 
   const isValidPhoneNumber = (num) => {
@@ -36,8 +56,18 @@ export default function ConfigScreen() {
   };
 
   const handleSave = async () => {
-    await saveNumbers([num1, num2, num3].filter(Boolean));
-    setSnackVisible(true);
+    const numbersToSave = [num1, num2, num3].filter(Boolean);
+    console.log("Guardando números:", numbersToSave);
+    console.log("Guardando preferencia:", contactPreference);
+
+    try {
+      await saveNumbers(numbersToSave);
+      await saveContactPreference(contactPreference);
+      console.log("Datos guardados exitosamente");
+      setSnackVisible(true);
+    } catch (error) {
+      console.error("Error guardando datos:", error);
+    }
   };
 
   const clearNumber = (setter) => {
@@ -69,8 +99,9 @@ export default function ConfigScreen() {
                 value={num1}
                 onChangeText={setNum1}
                 keyboardType="phone-pad"
-                style={{ height: 40, padding: 10 }}
-                theme={{ roundness: 30 }}
+                style={{ marginBottom: 5 }}
+                contentStyle={{ paddingHorizontal: 12 }}
+                theme={{ roundness: 12 }}
                 mode="outlined"
                 left={<TextInput.Icon icon="phone" />}
                 right={
@@ -98,8 +129,9 @@ export default function ConfigScreen() {
                 value={num2}
                 onChangeText={setNum2}
                 keyboardType="phone-pad"
-                style={{ height: 40, padding: 10 }}
-                theme={{ roundness: 30 }}
+                style={{ marginBottom: 5 }}
+                contentStyle={{ paddingHorizontal: 12 }}
+                theme={{ roundness: 12 }}
                 mode="outlined"
                 left={<TextInput.Icon icon="phone" />}
                 right={
@@ -127,8 +159,9 @@ export default function ConfigScreen() {
                 value={num3}
                 onChangeText={setNum3}
                 keyboardType="phone-pad"
-                style={{ height: 40, padding: 10 }}
-                theme={{ roundness: 30 }}
+                style={{ marginBottom: 5 }}
+                contentStyle={{ paddingHorizontal: 12 }}
+                theme={{ roundness: 12 }}
                 mode="outlined"
                 left={<TextInput.Icon icon="phone" />}
                 right={
@@ -148,6 +181,39 @@ export default function ConfigScreen() {
                   : "Número terciario (opcional)"}
               </HelperText>
             </View>
+
+            <Card style={{ marginTop: 10 }}>
+              <Card.Content>
+                <Text style={{ fontSize: 18, marginBottom: 10 }}>
+                  Método de Contacto Preferido
+                </Text>
+
+                <RadioButton.Group
+                  onValueChange={(value) => setContactPreference(value)}
+                  value={contactPreference}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginBottom: 10,
+                    }}
+                  >
+                    <RadioButton value="call" />
+                    <Text style={{ marginLeft: 8, flex: 1 }}>
+                      📞 Llamada telefónica (recomendado)
+                    </Text>
+                  </View>
+
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <RadioButton value="sms" />
+                    <Text style={{ marginLeft: 8, flex: 1 }}>
+                      💬 Mensaje SMS
+                    </Text>
+                  </View>
+                </RadioButton.Group>
+              </Card.Content>
+            </Card>
 
             <Button
               mode="contained"
