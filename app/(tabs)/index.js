@@ -1,30 +1,16 @@
 import { useFocusEffect } from "@react-navigation/native";
 import * as Linking from "expo-linking";
 import * as SMS from "expo-sms";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
-import { Button, Chip, Divider, IconButton, Surface } from "react-native-paper";
-import { getContactPreference, getNumbers } from "../../utils/storage";
+import { Button, Chip, Divider, Surface } from "react-native-paper";
+import { getNumbers } from "../../utils/storage";
 
 export default function HomeScreen() {
   const [numbers, setNumbers] = useState([]);
-  const [contactPreference, setContactPreference] = useState("call");
-
-  const loadNumbers = async () => {
-    try {
-      const nums = await getNumbers();
-      const preference = await getContactPreference();
-      console.log("Números cargados:", nums);
-      console.log("Preferencia cargada:", preference);
-      setNumbers(nums);
-      setContactPreference(preference);
-    } catch (error) {
-      console.error("Error cargando datos:", error);
-    }
-  };
 
   useEffect(() => {
-    loadNumbers();
+    getNumbers().then(setNumbers);
   }, []);
 
   // Recargar números cuando la pantalla recibe foco
@@ -114,6 +100,70 @@ export default function HomeScreen() {
     }
   };
 
+  if (!isLoaded) return null;
+
+  const BigButtonStyle = {
+    borderRadius: 100,
+    width: 200,
+    height: 200,
+    justifyContent: "center",
+    alignItems: "center",
+  };
+  const SmallButtonStyle = {
+    borderRadius: 100,
+    width: 100,
+    height: 100,
+    justifyContent: "center",
+    alignItems: "center",
+  };
+
+  const CallButton = (
+    <Button
+      mode="contained"
+      onPress={handleCall}
+      icon="phone"
+      style={{
+        marginBottom: 20,
+        backgroundColor: "red",
+        border: "12px solid #000",
+        ...(priorityIsText ? SmallButtonStyle : BigButtonStyle),
+      }}
+      labelStyle={{
+        fontSize: priorityIsText ? 16 : 20,
+        color: "white",
+      }}
+      contentStyle={{
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      Llamar
+    </Button>
+  );
+
+  const TextButton = (
+    <Button
+      mode="contained"
+      onPress={handleMessage}
+      icon="message"
+      style={{
+        marginBottom: 20,
+        backgroundColor: "#F7941D",
+        ...(priorityIsText ? BigButtonStyle : SmallButtonStyle),
+      }}
+      labelStyle={{
+        fontSize: priorityIsText ? 20 : 16,
+        color: "white",
+      }}
+      contentStyle={{
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      Text
+    </Button>
+  );
+
   return (
     <ScrollView style={{ flex: 1 }}>
       <Surface style={{ flex: 1, padding: 20 }}>
@@ -181,13 +231,12 @@ export default function HomeScreen() {
             justifyContent: "center",
             alignItems: "center",
             padding: 20,
-            border: "12px solid #000",
           }}
         >
           <Button
             mode="contained"
             onPress={handleCall}
-            icon={contactPreference === "sms" ? "message-alert" : "phone"}
+            icon="phone"
             style={{
               marginBottom: 20,
               borderRadius: 100,
@@ -200,13 +249,13 @@ export default function HomeScreen() {
             }}
             labelStyle={{ fontSize: 20, color: "white" }}
           >
-            {contactPreference === "sms" ? "Enviar SMS" : "Llamar"}
+            Llamar
           </Button>
 
           <Button
             mode="contained"
-            onPress={handleSecondaryAction}
-            icon={contactPreference === "sms" ? "phone" : "message"}
+            onPress={handleMessage}
+            icon="message"
             style={{
               borderRadius: 100,
               backgroundColor: "#F7941D",
@@ -219,7 +268,7 @@ export default function HomeScreen() {
             }}
             labelStyle={{ fontSize: 16, color: "white" }}
           >
-            {contactPreference === "sms" ? "Llamar" : "SMS"}
+            Text
           </Button>
         </View>
       </Surface>
