@@ -2,14 +2,15 @@ import { useFocusEffect } from "@react-navigation/native";
 import * as Linking from "expo-linking";
 import * as SMS from "expo-sms";
 import React, { useEffect, useState } from "react";
-import { Alert, ScrollView, View } from "react-native";
-import { Button, Chip, Divider, IconButton, Surface } from "react-native-paper";
+import { Alert, View } from "react-native";
+import { Button, Divider, Surface, Text } from "react-native-paper";
 import { getContactPreference, getNumbers } from "../../utils/storage";
 
 export default function HomeScreen() {
   const [numbers, setNumbers] = useState([]);
   const [contactPreference, setContactPreference] = useState("call");
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
 
   const loadNumbers = async () => {
     try {
@@ -120,113 +121,103 @@ export default function HomeScreen() {
   if (!isLoaded) return null;
 
   return (
-    <ScrollView style={{ flex: 1 }}>
-      <Surface style={{ flex: 1, padding: 20 }}>
-        <View style={{ marginBottom: 20 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 10,
-            }}
-          >
-            <Chip icon="phone" mode="outlined">
-              Números configurados: {numbers ? numbers.length : 0}
-            </Chip>
-            <IconButton
-              icon="refresh"
-              size={20}
-              onPress={loadNumbers}
-              mode="outlined"
-            />
-          </View>
+    <View style={{ flex: 1 }}>
+      <Surface style={{ flex: 1 }}>
+        {/* Header con información de estado */}
 
-          {numbers && numbers.length > 0 && (
-            <View style={{ marginTop: 10 }}>
-              {numbers.map(
-                (num, index) =>
-                  num && (
-                    <Chip
-                      key={index}
-                      icon="account"
-                      mode="flat"
-                      style={{ marginBottom: 5, marginRight: 5 }}
-                    >
-                      Contacto {index + 1}: {num}
-                    </Chip>
-                  )
-              )}
-            </View>
-          )}
+        <Divider />
 
-          {(!numbers || numbers.length === 0) && (
-            <Chip
-              icon="alert-circle"
-              mode="outlined"
-              style={{ backgroundColor: "#ffebee" }}
-            >
-              ⚠️ No hay números configurados
-            </Chip>
-          )}
-
-          {numbers && numbers.length > 0 && (
-            <Chip icon="cog" mode="flat" style={{ marginTop: 5 }}>
-              Método preferido:{" "}
-              {contactPreference === "call" ? "📞 Llamada" : "💬 SMS"}
-            </Chip>
-          )}
-        </View>
-
-        <Divider style={{ marginBottom: 30 }} />
-
+        {/* Área central para los botones */}
         <View
           style={{
             flex: 1,
             justifyContent: "center",
             alignItems: "center",
-            padding: 20,
+            paddingHorizontal: 40,
+            paddingVertical: 20,
           }}
         >
+          {/* Título de emergencia */}
+          <Text
+            variant="headlineSmall"
+            style={{
+              textAlign: "center",
+              marginBottom: 30,
+              color: "#d32f2f",
+              fontWeight: "bold",
+            }}
+          >
+            🚨 EMERGENCIA
+          </Text>
           <Button
             mode="contained"
             onPress={handleCall}
             icon={contactPreference === "sms" ? "message-alert" : "phone"}
             style={{
-              marginBottom: 20,
-              borderRadius: 100,
-              backgroundColor: "red",
-              width: 200,
-              height: 200,
+              borderRadius: 120,
+              backgroundColor: "#d32f2f",
+              width: 220,
+              height: 220,
               justifyContent: "center",
               alignItems: "center",
-              border: "12px solid #000",
+              elevation: isPressed ? 2 : 8,
+              shadowColor: "#000",
+              shadowOffset: {
+                width: 0,
+                height: isPressed ? 1 : 4,
+              },
+              shadowOpacity: 0.3,
+              shadowRadius: isPressed ? 2 : 4.65,
+              marginBottom: 40,
+              transform: [{ scale: isPressed ? 0.96 : 1 }],
             }}
-            labelStyle={{ fontSize: 20, color: "white" }}
+            labelStyle={{ fontSize: 18, color: "white", fontWeight: "bold" }}
+            contentStyle={{
+              width: 220,
+              height: 220,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+            onPressIn={() => setIsPressed(true)}
+            onPressOut={() => setIsPressed(false)}
           >
-            {contactPreference === "sms" ? "Enviar SMS" : "Llamar"}
+            {contactPreference === "sms" ? "ENVIAR SMS" : "LLAMAR"}
           </Button>
-
+          <Text
+            variant="bodyMedium"
+            style={{
+              textAlign: "center",
+              marginBottom: 20,
+              color: "#666",
+              paddingHorizontal: 20,
+            }}
+          >
+            {contactPreference === "sms"
+              ? "Enviará SMS de emergencia a tus contactos"
+              : "Llamará a tu contacto principal de emergencia"}
+          </Text>
+          {/* Botón secundario - Más pequeño debajo */}
           <Button
-            mode="contained"
+            mode="outlined"
             onPress={handleSecondaryAction}
             icon={contactPreference === "sms" ? "phone" : "message"}
             style={{
-              borderRadius: 100,
-              backgroundColor: "#F7941D",
+              borderRadius: 25,
+              borderColor: "#F7941D",
+              borderWidth: 2,
             }}
+            labelStyle={{ fontSize: 14, color: "#F7941D", fontWeight: "500" }}
             contentStyle={{
-              width: 100,
-              height: 100,
-              justifyContent: "center",
-              alignItems: "center",
+              paddingHorizontal: 20,
+              paddingVertical: 8,
             }}
-            labelStyle={{ fontSize: 16, color: "white" }}
           >
-            {contactPreference === "sms" ? "Llamar" : "SMS"}
+            {contactPreference === "sms"
+              ? "O llamar directamente"
+              : "O enviar SMS"}
           </Button>
         </View>
       </Surface>
-    </ScrollView>
+    </View>
   );
 }
